@@ -10,9 +10,7 @@ module Relaton
     def initialize(dir, ext = "xml")
       @dir = dir
       @ext = ext
-      FileUtils::mkdir_p @dir
-      # file_version = "#{@dir}/version"
-      # set_version # unless File.exist? file_version
+      FileUtils::mkdir_p dir
     end
 
     # Move caches to anothe dir
@@ -32,7 +30,7 @@ module Relaton
 
     # Clear database
     def clear
-      FileUtils.rm_rf Dir.glob "#{dir}/*" if @ext == "xml" # unless it's static DB
+      FileUtils.rm_rf Dir.glob "#{dir}/*" if @ext == "xml" # if it isn't a static DB
     end
 
     # Save item
@@ -43,21 +41,11 @@ module Relaton
         delete key
         return
       end
-
-      prefix_dir = "#{@dir}/#{prefix(key)}"
+      /^(?<pref>[^(]+)(?=\()/ =~ key.downcase
+      prefix_dir = "#{@dir}/#{pref}"
       FileUtils::mkdir_p prefix_dir unless Dir.exist? prefix_dir
       set_version prefix_dir
       file_safe_write "#{filename(key)}.#{ext(value)}", value
-    end
-
-    # @param value [String]
-    # @return [String]
-    def ext(value)
-      case value
-      when /^not_found/ then "notfound"
-      when /^redirection/ then "redirect"
-      else @ext
-      end
     end
 
     # Read item
@@ -86,7 +74,7 @@ module Relaton
       value = self[key]
       return unless value
 
-      if value.match? /^not_found/
+      if value.match?(/^not_found/)
         value.match(/\d{4}-\d{2}-\d{2}/).to_s
       else
         doc = Nokogiri::XML value
@@ -96,10 +84,10 @@ module Relaton
 
     # Returns all items
     # @return [Array<String>]
-    def all
+    def all(&block)
       Dir.glob("#{@dir}/**/*.{xml,yml,yaml}").sort.map do |f|
         content = File.read(f, encoding: "utf-8")
-        block_given? ? yield(f, content) : content
+        block ? yield(f, content) : content
       end
     end
 
@@ -107,30 +95,19 @@ module Relaton
     # @param key [String]
     def delete(key)
       file = filename key
-      f = search_ext(file)
+      f = search_ext file
       File.delete f if f
     end
 
     # Check if version of the DB match to the gem grammar hash.
     # @param fdir [String] dir pathe to flover cache
-    # @return [TrueClass, FalseClass]
+    # @return [Boolean]
     def check_version?(fdir)
-      version_dir = fdir + "/version"
-      return false unless File.exist? version_dir
+      version_file = "#{fdir}/version"
+      return false unless File.exist? version_file
 
-      v = File.read version_dir, encoding: "utf-8"
-      v.strip == grammar_hash(fdir)
-    end
-
-    # Set version of the DB to the gem grammar hash.
-    # @param fdir [String] dir pathe to flover cache
-    # @return [Relaton::DbCache]
-    def set_version(fdir)
-      file_version = "#{fdir}/version"
-      unless File.exist? file_version
-        file_safe_write file_version, grammar_hash(fdir)
-      end
-      self
+      v = File.read version_file, encoding: "utf-8"
+      v.strip == self.class.grammar_hash(fdir)
     end
 
     # if cached reference is undated, expire it after 60 days
@@ -144,15 +121,6 @@ module Relaton
       year || Date.today - date < 60
     end
 
-    protected
-
-    # @param fdir [String] dir pathe to flover cache
-    # @return [String]
-    def grammar_hash(fdir)
-      type = fdir.split("/").last
-      Relaton::Registry.instance.by_type(type)&.grammar_hash
-    end
-
     # Reads file by a key
     #
     # @param key [String]
@@ -164,28 +132,23 @@ module Relaton
       File.read(f, encoding: "utf-8")
     end
 
-    private
-
-    # Check if a file content is redirection
-    #
-    # @prarm value [String] file content
-    # @return [String, NilClass] redirection code or nil
-    def redirect?(value)
-      %r{redirection\s(?<code>.*)} =~ value
-      code
+    # @param fdir [String] dir pathe to flover cache
+    # @return [String]
+    def self.grammar_hash(fdir)
+      type = fdir.split("/").last
+      Relaton::Registry.instance.by_type(type)&.grammar_hash
     end
 
-    # Return item's file name
-    # @param key [String]
+    private
+
+    # @param value [String]
     # @return [String]
-    def filename(key)
-      prefcode = key.downcase.match /^(?<prefix>[^\(]+)\((?<code>[^\)]+)/
-      fn = if prefcode
-             "#{prefcode[:prefix]}/#{prefcode[:code].gsub(/[-:\s\/\()]/, '_').squeeze('_')}"
-           else
-             key.gsub(/[-:\s]/, "_")
-           end
-      "#{@dir}/#{fn.sub(/(,|_$)/, '')}"
+    def ext(value)
+      case value
+      when /^not_found/ then "notfound"
+      when /^redirection/ then "redirect"
+      else @ext
+      end
     end
 
     #
@@ -204,11 +167,36 @@ module Relaton
       end
     end
 
-    # Return item's subdir
+    # Set version of the DB to the gem grammar hash.
+    # @param fdir [String] dir pathe to flover cache
+    def set_version(fdir)
+      file_version = "#{fdir}/version"
+      unless File.exist? file_version
+        file_safe_write file_version, self.class.grammar_hash(fdir)
+      end
+    end
+
+    # Return item's file name
     # @param key [String]
     # @return [String]
-    def prefix(key)
-      key.downcase.match(/^[^\(]+(?=\()/).to_s
+    def filename(key)
+      prefcode = key.downcase.match(/^(?<prefix>[^(]+)\((?<code>[^)]+)/)
+      fn = if prefcode
+             "#{prefcode[:prefix]}/#{prefcode[:code].gsub(/[-:\s\/()]/, '_')
+               .squeeze('_')}"
+           else
+             key.gsub(/[-:\s]/, "_")
+           end
+      "#{@dir}/#{fn.sub(/(,|_$)/, '')}"
+    end
+
+    # Check if a file content is redirection
+    #
+    # @prarm value [String] file content
+    # @return [String, NilClass] redirection code or nil
+    def redirect?(value)
+      %r{redirection\s(?<code>.*)} =~ value
+      code
     end
 
     # @param file [String]
@@ -217,38 +205,6 @@ module Relaton
       File.open file, File::RDWR | File::CREAT, encoding: "UTF-8" do |f|
         Timeout.timeout(10) { f.flock File::LOCK_EX }
         f.write content
-      end
-    end
-
-    class << self
-      private
-
-      def global_bibliocache_name
-        "#{Dir.home}/.relaton/cache"
-      end
-
-      def local_bibliocache_name(cachename)
-        return nil if cachename.nil?
-
-        cachename = "relaton" if cachename.empty?
-        "#{cachename}/cache"
-      end
-
-      public
-
-      # Initialse and return relaton instance, with local and global cache names
-      # local_cache: local cache name; none created if nil; "relaton" created
-      # if empty global_cache: boolean to create global_cache
-      # flush_caches: flush caches
-      def init_bib_caches(opts) # rubocop:disable Metrics/CyclomaticComplexity
-        globalname = global_bibliocache_name if opts[:global_cache]
-        localname = local_bibliocache_name(opts[:local_cache])
-        localname = "relaton" if localname&.empty?
-        if opts[:flush_caches]
-          FileUtils.rm_rf globalname unless globalname.nil?
-          FileUtils.rm_rf localname unless localname.nil?
-        end
-        Relaton::Db.new(globalname, localname)
       end
     end
   end

@@ -1,5 +1,6 @@
 require "relaton/util"
 require "relaton/config"
+require "yaml"
 
 require "relaton/workers_pool"
 require "relaton/db"

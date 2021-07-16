@@ -7,8 +7,10 @@ http_interactions:
       encoding: US-ASCII
       string: ''
     headers:
+      If-None-Match:
+      - W/"7b9100d7e1b51134661d57c6ed9149a2f6fa4660921e38163e11c7bc760ad0c5"
       User-Agent:
-      - Faraday v1.5.0
+      - Faraday v1.4.3
       Accept-Encoding:
       - gzip;q=1.0,deflate;q=0.6,identity;q=0.3
       Accept:
@@ -39,29 +41,29 @@ http_interactions:
       X-Xss-Protection:
       - 1; mode=block
       X-Github-Request-Id:
-      - CA2C:79D5:4B03A9:5E1BBF:60EEE4E7
+      - 153C:2E3F:CC0659:DE1628:60EAD2E6
       Accept-Ranges:
       - bytes
       Date:
-      - Wed, 14 Jul 2021 13:40:16 GMT
+      - Sun, 11 Jul 2021 11:15:50 GMT
       Via:
       - 1.1 varnish
       X-Served-By:
-      - cache-muc13924-MUC
+      - cache-lcy19249-LCY
       X-Cache:
       - MISS
       X-Cache-Hits:
       - '0'
       X-Timer:
-      - S1626270016.145003,VS0,VE155
+      - S1626002150.283134,VS0,VE275
       Vary:
       - Authorization,Accept-Encoding
       Access-Control-Allow-Origin:
       - "*"
       X-Fastly-Request-Id:
-      - c4c8ebe59d07c8c4658c216d3a0eee5473606c2d
+      - 2846f0e1440df827f121700ad6996a5411f8fa03
       Expires:
-      - Wed, 14 Jul 2021 13:45:16 GMT
+      - Sun, 11 Jul 2021 11:20:50 GMT
       Source-Age:
       - '0'
     body:
@@ -13201,5 +13203,5 @@ http_interactions:
         Kottman","contributor":null,"description":"Introduction and roadmap to the
         Abstract specification.","publisher":"Open Geospatial Consortium","language":"English","license":null,"source":null,"rights":"","isPartOf":null,"date":"1999-06-23","dateAccepted":null,"dateSubmitted":null,"format":null,"hasFormat":null,"extent":null}}'
     http_version:
-  recorded_at: Wed, 14 Jul 2021 13:40:16 GMT
+  recorded_at: Sun, 11 Jul 2021 11:15:50 GMT
 recorded_with: VCR 5.1.0

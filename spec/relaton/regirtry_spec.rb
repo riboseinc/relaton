@@ -2,7 +2,7 @@ RSpec.describe Relaton::Registry do
   it "outputs backend not present" do
     stub_const "Relaton::Registry::SUPPORTED_GEMS", ["not_supported_gem"]
     expect { Relaton::Registry.clone.instance }.to output(
-      /backend not_supported_gem not present/
+      /backend not_supported_gem not present/,
     ).to_stderr
   end
 

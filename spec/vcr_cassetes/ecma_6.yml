@@ -39,29 +39,29 @@ http_interactions:
       X-Xss-Protection:
       - 1; mode=block
       X-Github-Request-Id:
-      - DA00:2D35:4AE643:4E90DF:60EEE4FD
+      - 9F3E:79D6:441BDC:4BEB48:60EAD2F2
       Accept-Ranges:
       - bytes
       Date:
-      - Wed, 14 Jul 2021 13:22:05 GMT
+      - Sun, 11 Jul 2021 11:16:02 GMT
       Via:
       - 1.1 varnish
       X-Served-By:
-      - cache-muc13974-MUC
+      - cache-lcy19241-LCY
       X-Cache:
       - MISS
       X-Cache-Hits:
       - '0'
       X-Timer:
-      - S1626268925.247419,VS0,VE192
+      - S1626002162.153073,VS0,VE205
       Vary:
       - Authorization,Accept-Encoding
       Access-Control-Allow-Origin:
       - "*"
       X-Fastly-Request-Id:
-      - e060f146dcbc3081a33708084ac4e8329e4d2e69
+      - 5677904190dc11ebdcb56be92f364d4ef06c8a70
       Expires:
-      - Wed, 14 Jul 2021 13:27:05 GMT
+      - Sun, 11 Jul 2021 11:21:02 GMT
       Source-Age:
       - '0'
     body:
@@ -155,5 +155,5 @@ http_interactions:
         place: Geneva
         doctype: document
     http_version:
-  recorded_at: Wed, 14 Jul 2021 13:22:05 GMT
+  recorded_at: Sun, 11 Jul 2021 11:16:02 GMT
 recorded_with: VCR 5.1.0

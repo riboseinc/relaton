@@ -1,3 +1,3 @@
 module Relaton
-  VERSION = "1.8.1".freeze
+  VERSION = "1.8.pre4".freeze
 end

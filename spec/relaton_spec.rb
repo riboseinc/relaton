@@ -6,7 +6,7 @@ RSpec.describe Relaton::Db do
 
   it "rejects an illegal reference prefix" do
     expect { @db.fetch("XYZ XYZ", nil, {}) }.to output(
-      /does not have a recognised prefix/
+      /does not have a recognised prefix/,
     ).to_stderr
   end
 
@@ -38,7 +38,7 @@ RSpec.describe Relaton::Db do
           'type="standard">'
         testcache = Relaton::DbCache.new "testcache"
         expect(
-          testcache.valid_entry?("ISO(ISO 19133:2005)", Date.today.year.to_s)
+          testcache.valid_entry?("ISO(ISO 19133:2005)", Date.today.year.to_s),
         ).to eq Date.today.year.to_s
       end
     end
@@ -355,7 +355,7 @@ RSpec.describe Relaton::Db do
 
     context "HIST" do
       it "included" do
-        VCR.use_cassette "hist_cmbined_included" do
+        VCR.use_cassette "hist_combined_included" do
           bib = @db.fetch "NIST SP 800-38A, Add"
           expect(bib.docidentifier[0].id).to eq "NIST SP 800-38A, Add"
           expect(bib.relation[0].type).to eq "updates"
@@ -371,7 +371,7 @@ RSpec.describe Relaton::Db do
   context "version control" do
     before(:each) { @db.save_entry "iso(test_key)", "<bibitem><title>test_value</title></bibitem>" }
 
-    it "shoudn't clear cacho if version isn't changed" do
+    it "shoudn't clear cache if version isn't changed" do
       testcache = @db.instance_variable_get :@db
       expect(testcache.all).to be_any
       testcache = @db.instance_variable_get :@local_db
@@ -387,6 +387,40 @@ RSpec.describe Relaton::Db do
       Relaton::Db.new "testcache", "testcache2"
       expect(File.exist?("testcache/iso/version")).to eq false
       expect(File.exist?("testcache2/iso/version")).to eq false
+    end
+  end
+
+  context "api.relaton.org" do
+    before(:each) do
+      Relaton.configure do |config|
+        config.use_api = true
+        # config.api_host = "http://0.0.0.0:9292"
+      end
+    end
+
+    after(:each) do
+      Relaton.configure do |config|
+        config.use_api = false
+      end
+    end
+
+    it "get document" do
+      VCR.use_cassette "api_relaton_org" do
+        bib = @db.fetch "ISO 19115-2", "2019"
+        expect(bib).to be_instance_of RelatonIsoBib::IsoBibliographicItem
+      end
+    end
+
+    it "if unavailable then get document directly" do
+      expect(Net::HTTP).to receive(:get_response).and_wrap_original do |m, *args|
+        raise Errno::ECONNREFUSED if args[0].host == "api.relaton.org"
+
+        m.call(*args)
+      end.at_least :once
+      VCR.use_cassette "api_relaton_org_unavailable" do
+        bib = @db.fetch "ISO 19115-2", "2019"
+        expect(bib).to be_instance_of RelatonIsoBib::IsoBibliographicItem
+      end
     end
   end
 end
